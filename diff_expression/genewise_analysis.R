@@ -2,6 +2,7 @@
 
 # Scott Fay 
 # 15 Jan 2013
+# Jonathon Stillman 10 Apr 2014
 
 # to install packages:
 # install.packages("ggplot2")
@@ -11,6 +12,7 @@
 
 library(ggplot2)
 library(edgeR)
+library(plyr)
 
 #####
 #
@@ -19,14 +21,16 @@ library(edgeR)
 #####
 
 # Load in FPKM object made in get_express_data.R
+#??? should that be "import_express_data.R"
+#???  is it all_fpkm ??
 
 # load group file; should be in the same directory as FPKM object 
-group <- read.delim(" PATH TO GROUP FILE; FILENAME")
+group <- read.delim(file.choose())
 
 # get annotation file
 # define this on the command line
 # "trinotate_annotation_report.txt" is a Trinotate output excel file, exported as tab-delimited
-transcripts <- read.delim("/Users/scottfay/annotation/Calineuria/trinotate_annotation_report.txt")
+transcripts <- read.delim(file.choose())
 
 # get the transcript ID from the command line too
 
@@ -56,6 +60,16 @@ get_gene_data <- function(gene, fpkm) {
   out_frame <- data.frame(fpkm_mean, SD, temp)
   return(out_frame)
 }
+
+######
+## alternative method using plyr
+######
+fpkm_mean<-ddply(all_fpkm,.(pH,Temperature), function(d) mean(d$fpkm)) # if group file has columns called pH and Temperature
+SD<-ddply(all_fpkm,.(pH,Temperature), function(d) sd(d$fpkm)) # if group file has columns called pH and Temperature
+names(fpkm_mean)=c("pH","Temperature","fpkm_mean") # rename
+names(SD)=c("pH","Temperature","SD") # rename
+out_frame=merge(means,SD) #make one data frame
+out_frame=out_frame[,c(3,4,1,2)] # reorder columns
 
 # test getting fpkm data for a specific gene
 #gene_data <- get_gene_data("comp63351_c0_seq3", all_fpkm)
